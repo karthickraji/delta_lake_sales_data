@@ -3,7 +3,18 @@ from config.spark_config import get_spark_session
 
 spark_session = get_spark_session()
 
+# daily revenue
+daily_revenue = spark_session.sql(f"""
+select order_date, sum(price * quantity) as daily_revenue 
+from spark_sales_db.orders_data group by order_date order by daily_revenue desc;
+""")
+daily_revenue.write.format("delta").save(f"{HDFS_GOLD_PATH}/daily_revenue")
 
+# category wise revenue
+category_wise_revenue = spark_session.sql(f"""
+select category, sum(price * quantity) as total_revenue from spark_sales_db.orders_data group by category order by total_revenue desc;
+""")
+category_wise_revenue.write.format("delta").save(f"{HDFS_GOLD_PATH}/category_wise_revenue")
 
 # customer wise revenue
 customer_wise_revenue = spark_session.sql(f"""
