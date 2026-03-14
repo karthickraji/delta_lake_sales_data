@@ -1,0 +1,5 @@
+faker
+pandas
+pyspark
+delta-spark
+faker-commerce
