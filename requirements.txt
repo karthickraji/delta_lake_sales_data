@@ -3,3 +3,7 @@ pandas
 pyspark
 delta-spark
 faker-commerce
+apache-airflow
+pytest
+apache-airflow-providers-apache-spark
+chispa

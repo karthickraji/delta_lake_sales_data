@@ -1,22 +1,36 @@
 from config.basic_config import HDFS_BRONZE_PATH, HDFS_SOURCE_DATA_PATH
 from config.spark_config import get_spark_session
+from config.logging_config import setup_logging
+import logging
 
-spark_session = get_spark_session()
+setup_logging()
 
-users_df = (
-    spark_session.read
-      .option("header", "true")
-      .option("inferSchema", "true")
-      .csv(f"{HDFS_SOURCE_DATA_PATH}/users_data.csv")
-)
-users_df.write.format("delta").mode("overwrite").save(f"{HDFS_BRONZE_PATH}/users_data")
+logger = logging.getLogger(__name__)
 
-orders_df = (
-    spark_session.read
-    .option("header", "true")
-    .option("inferSchema", "true")
-    .csv(f"{HDFS_SOURCE_DATA_PATH}/orders_data.csv")
-)
-orders_df.write.format("delta").mode("overwrite").save(f"{HDFS_BRONZE_PATH}/orders_data")
+def extract_user_data(spark):
+    users_df = (
+        spark.read
+          .option("header", "true")
+          .option("inferSchema", "true")
+          .csv(f"{HDFS_SOURCE_DATA_PATH}/users_data.csv")
+    )
+    logging.info(f"Raw users data has ingested {len(users_df)} rows")
+    users_df.write.format("delta").mode("overwrite").save(f"{HDFS_BRONZE_PATH}/users_data")
+    logging.info(f"Raw users data has been written into Bronze folder!")
 
-spark_session.stop()
+def extract_orders_data(spark):
+    orders_df = (
+        spark.read
+        .option("header", "true")
+        .option("inferSchema", "true")
+        .csv(f"{HDFS_SOURCE_DATA_PATH}/orders_data.csv")
+    )
+    logging.info(f"Raw orders data has ingested {len(orders_df)} rows")
+    orders_df.write.format("delta").mode("overwrite").save(f"{HDFS_BRONZE_PATH}/orders_data")
+    logging.info(f"Raw orders data has been written into Bronze folder!")
+
+if __name__ == "__main__":
+    spark_session = get_spark_session()
+    extract_user_data(spark_session)
+    extract_orders_data(spark_session)
+    spark_session.stop()

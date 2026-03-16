@@ -1,24 +1,35 @@
 from config.basic_config import HDFS_BRONZE_PATH, HDFS_SILVER_PATH
 from config.spark_config import get_spark_session
 
-spark_session = get_spark_session()
+def remove_negative_values(df, field):
+    return df[df[f'{field}'] > 0]
 
-users_df = (
-    spark_session.read.format("delta").load(f"{HDFS_BRONZE_PATH}/users_data")
-)
+def remove_null_values(df):
+    return df.dropna()
 
-users_df_clean = users_df.dropna()
-users_df_clean = users_df_clean.dropDuplicates(["name", "email"])
-users_df_clean.write.format("delta").save(f"{HDFS_SILVER_PATH}/users_data_clean")
+def remove_duplicates(df, data_fields):
+    return df.dropDuplicates(data_fields)
 
-orders_df = (
-    spark_session.read.format("delta").load(f"{HDFS_BRONZE_PATH}/orders_data")
-)
+def clean_and_transform_users_data():
+    users_df = (
+        spark_session.read.format("delta").load(f"{HDFS_BRONZE_PATH}/users_data")
+    )
+    users_df_clean = remove_null_values(users_df)
+    users_df_clean = remove_duplicates(users_df_clean, ["name", "email"])
+    users_df_clean.write.format("delta").save(f"{HDFS_SILVER_PATH}/users_data_clean")
 
-orders_df_clean = orders_df.filter(orders_df.quantity > 0)
-orders_df_clean = orders_df_clean.dropna()
-orders_df_clean = orders_df_clean.dropDuplicates(["quantity"])
-orders_df_clean.write.format("delta").save(f"{HDFS_SILVER_PATH}/orders_data_clean")
+def clean_and_transform_orders_data():
+    orders_df = (
+        spark_session.read.format("delta").load(f"{HDFS_BRONZE_PATH}/orders_data")
+    )
 
+    orders_df_clean = remove_negative_values(orders_df, "quantity")
+    orders_df_clean = remove_null_values(orders_df_clean)
+    orders_df_clean = remove_duplicates(orders_df_clean, ["quantity"])
+    orders_df_clean.write.format("delta").save(f"{HDFS_SILVER_PATH}/orders_data_clean")
 
-spark_session.stop()
+if __name__ == "__main__":
+    spark_session = get_spark_session()
+    clean_and_transform_users_data()
+    clean_and_transform_orders_data()
+    spark_session.stop()
