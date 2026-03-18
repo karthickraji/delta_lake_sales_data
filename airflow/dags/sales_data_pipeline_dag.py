@@ -34,6 +34,7 @@ with DAG(
     extract = SparkSubmitOperator(
         task_id="extract_data",
         application=f"{PROJECT_PATH}/spark_jobs/ingest.py",
+        py_files=f"{PROJECT_PATH}/spark_jobs/dependencies.zip",
         conn_id="spark_default"
     )
 
@@ -45,6 +46,7 @@ with DAG(
     transform = SparkSubmitOperator(
         task_id="transform_data",
         application=f"{PROJECT_PATH}/spark_jobs/clean_and_transform.py",
+        py_files=f"{PROJECT_PATH}/spark_jobs/dependencies.zip",
         conn_id="spark_default"
     )
 
@@ -56,6 +58,7 @@ with DAG(
     load_aggregate_data_to_gold = SparkSubmitOperator(
         task_id="aggregate_data",
         application=f"{PROJECT_PATH}/spark_jobs/load.py",
+        py_files=f"{PROJECT_PATH}/spark_jobs/dependencies.zip",
         conn_id="spark_default"
     )
 

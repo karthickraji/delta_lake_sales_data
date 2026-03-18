@@ -1,6 +1,6 @@
 faker
 pandas
-pyspark
+pyspark==3.5.1
 delta-spark
 faker-commerce
 apache-airflow
